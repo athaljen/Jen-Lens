@@ -82,7 +82,7 @@ const LensCamera = ({onImageCapture}: LensProps) => {
 
         ///set svg from corners
         const points = corners
-          .map(coord => `${screenWidth - coord.y / 1.63},${coord.x / 1.5}`)
+          .map(coord => `${screenWidth - coord.y / (pixel-0.9)},${coord.x / (pixel-1)}`)
           .join(' ');
         svgPath.current?.setNativeProps({points: points});
       }
