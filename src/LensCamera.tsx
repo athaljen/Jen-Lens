@@ -25,9 +25,42 @@ type LensProps = {
   onImageCapture: (image: string) => void;
 };
 
+const SmsRegex = /^SMSTO:(\+[0-9]+):(.+)$/;
+const WifiRegex = /^WIFI:S:([^;]+);T:([^;]+);P:([^;]+);H:(true|false);?$/;
+
 const OpenUrl = async (url: string) => {
+  // console.log(url);
   try {
-    await Linking.openURL(url);
+    let ModifiedUrl = '';
+    const match = url.match(SmsRegex);
+    const match1 = url.match(WifiRegex);
+    console.log(match1);
+
+    if (url?.toLowerCase()?.includes('http')) {
+      ModifiedUrl = url;
+    } else if (match && match.length === 3) {
+      const phoneNumber = match[1];
+      const messageBody = match[2];
+      ModifiedUrl = `sms:${phoneNumber}?body=${encodeURIComponent(
+        messageBody,
+      )}`;
+    } else if (match1 && match1.length === 5) {
+      console.log('called');
+
+      const ssid = match1[1];
+      const securityType = match1[2];
+      const password = match1[3];
+      const hidden = match1[4] === 'true' ? true : false;
+      ModifiedUrl = `wifi:${ssid}?password=${encodeURIComponent(
+        password,
+      )}&hidden=${hidden}`;
+    } else {
+      ModifiedUrl = url;
+    }
+
+    console.log(ModifiedUrl);
+    // return;
+    await Linking.openURL(ModifiedUrl);
   } catch (error) {
     console.log(error);
   }
@@ -70,24 +103,26 @@ const LensCamera = ({onImageCapture}: LensProps) => {
           setCode(value);
         }
 
-        let w = frame.width / (pixel - 0.9);
+        let w = frame.width / (pixel - 1);
 
         ///for pressable text
         const minX = Math.min(...corners.map(point => point.x));
         const minY = Math.min(...corners.map(point => point.y));
 
         top.setValue(minX / (pixel - 1) + frame.height / 3.8);
-        left.setValue(screenWidth - minY / (pixel - 0.9) - frame.width / 1.6);
+        left.setValue(screenWidth - minY / (pixel - 0.85) - frame.width / 1.6);
         width.setValue(w);
 
         ///set svg from corners
         const points = corners
-          .map(
-            coord =>
-              `${screenWidth - coord.y / (pixel - 0.9)},${
-                coord.x / (pixel - 1)
-              }`,
-          )
+          .map((coord, index) => {
+            return `${
+              screenWidth -
+              (coord.y - ([2, 3].includes(index) ? -20 : 20)) / (pixel - 0.85)
+            },${
+              (coord.x - ([2, 1].includes(index) ? -20 : 20)) / (pixel - 0.99)
+            }`;
+          })
           .join(' ');
         svgPath.current?.setNativeProps({points: points});
       }
@@ -233,7 +268,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flexShrink: 1,
     color: Colors.black,
-    padding: 5,
+    padding: 10,
     pointerEvents: 'box-only',
   },
   lowerContainer: {

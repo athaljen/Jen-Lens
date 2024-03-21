@@ -3,6 +3,7 @@ import React, {memo, useState} from 'react';
 import {SafeAreaView, StatusBar, StyleSheet, View} from 'react-native';
 import GoogleLens from './src/GoogleLens';
 import LensCamera from './src/LensCamera';
+import { Colors } from './src/constants';
 
 const App = () => {
   const [Image, setImage] = useState<string | undefined>();
@@ -20,7 +21,7 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  app: {flex: 1},
+  app: {flex: 1, backgroundColor: Colors.dark},
 });
 
 export default memo(App);
