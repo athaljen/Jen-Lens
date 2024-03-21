@@ -1,6 +1,6 @@
 'use strict';
 import React, {memo, useState} from 'react';
-import {SafeAreaView, StyleSheet} from 'react-native';
+import {SafeAreaView, StatusBar, StyleSheet, View} from 'react-native';
 import GoogleLens from './src/GoogleLens';
 import LensCamera from './src/LensCamera';
 
@@ -8,13 +8,14 @@ const App = () => {
   const [Image, setImage] = useState<string | undefined>();
 
   return (
-    <SafeAreaView style={styles.app}>
+    <View style={styles.app}>
+      <StatusBar translucent backgroundColor={'transparent'} />
       {Image ? (
         <GoogleLens image={Image} />
       ) : (
         <LensCamera onImageCapture={setImage} />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

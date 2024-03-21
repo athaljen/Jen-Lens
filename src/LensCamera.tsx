@@ -6,7 +6,6 @@ import {
   Animated,
   PixelRatio,
   Dimensions,
-  TextInput,
   Text,
   Linking,
 } from 'react-native';
@@ -26,9 +25,9 @@ type LensProps = {
   onImageCapture: (image: string) => void;
 };
 
-const OpenUrl = (url: string) => {
+const OpenUrl = async (url: string) => {
   try {
-    Linking.openURL(url);
+    await Linking.openURL(url);
   } catch (error) {
     console.log(error);
   }
@@ -70,19 +69,25 @@ const LensCamera = ({onImageCapture}: LensProps) => {
         if (Code != value) {
           setCode(value);
         }
-        let l = screenWidth - frame?.y / 1.65 - frame.width / 2.3;
-        let t = frame?.x / 1.5;
-        let w = frame.width / 1.6;
-        let h = frame.height / 1.6;
+
+        let w = frame.width / (pixel - 0.9);
 
         ///for pressable text
-        top.setValue(t + h / 2.5);
-        left.setValue(l - w / 3);
+        const minX = Math.min(...corners.map(point => point.x));
+        const minY = Math.min(...corners.map(point => point.y));
+
+        top.setValue(minX / (pixel - 1) + frame.height / 3.8);
+        left.setValue(screenWidth - minY / (pixel - 0.9) - frame.width / 1.6);
         width.setValue(w);
 
         ///set svg from corners
         const points = corners
-          .map(coord => `${screenWidth - coord.y / (pixel-0.9)},${coord.x / (pixel-1)}`)
+          .map(
+            coord =>
+              `${screenWidth - coord.y / (pixel - 0.9)},${
+                coord.x / (pixel - 1)
+              }`,
+          )
           .join(' ');
         svgPath.current?.setNativeProps({points: points});
       }
@@ -123,66 +128,79 @@ const LensCamera = ({onImageCapture}: LensProps) => {
 
   return (
     <View style={styles.app}>
-      <Camera
-        ref={cameraRef}
-        device={device}
-        style={styles.app}
-        resizeMode="cover"
-        photo
-        isActive
-        enableZoomGesture
-        codeScanner={{
-          codeTypes: ['qr', 'ean-13'],
-          onCodeScanned,
-        }}
-      />
-      <Svg style={{position: 'absolute', flex: 1}}>
-        <Polygon
-          ref={svgPath}
-          points={'0,0 0,0 0,0 0,0'}
-          fill="transparent"
-          stroke={Colors.white}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          strokeWidth={3}></Polygon>
-      </Svg>
+      <View style={styles.containerCamera}>
+        <Camera
+          ref={cameraRef}
+          device={device}
+          style={styles.app}
+          resizeMode="cover"
+          photo
+          isActive
+          enableZoomGesture
+          codeScanner={{
+            codeTypes: ['qr', 'ean-13'],
+            onCodeScanned,
+          }}
+        />
+        <Svg style={{position: 'absolute', flex: 1}} pointerEvents="none">
+          <Polygon
+            ref={svgPath}
+            points={'0,0 0,0 0,0 0,0'}
+            fill="transparent"
+            stroke={Colors.white}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            strokeWidth={3}></Polygon>
+        </Svg>
 
-      {Code ? (
-        <Animated.Text
-          onPress={OpenUrl.bind(null, Code)}
-          numberOfLines={1}
-          style={[styles.text, {top: top, left: left, width: width}]}>
-          {Code}
-        </Animated.Text>
-      ) : null}
-      <Pressable
-        onPress={CaptureImage}
-        style={({pressed}) => [
-          styles.capture,
-          {transform: [{scale: pressed ? 0.9 : 1}]},
-        ]}>
-        <View style={styles.searchInner}>
-          <FastImage
-            style={styles.search}
-            source={Icons.search}
-            resizeMode="contain"
-          />
-        </View>
-      </Pressable>
+        {Code ? (
+          <Animated.Text
+            onPress={OpenUrl.bind(null, Code)}
+            numberOfLines={1}
+            style={[styles.text, {top: top, left: left, width: width}]}>
+            {Code}
+          </Animated.Text>
+        ) : null}
+
+        <Pressable
+          onPress={CaptureImage}
+          style={({pressed}) => [
+            styles.capture,
+            {transform: [{scale: pressed ? 0.9 : 1}]},
+          ]}>
+          <View style={styles.searchInner}>
+            <FastImage
+              style={styles.search}
+              source={Icons.search}
+              resizeMode="contain"
+            />
+          </View>
+        </Pressable>
+      </View>
+      <View style={styles.lowerContainer}>
+        <Text style={styles.selectableText}>{'Search'}</Text>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  app: {flex: 1},
+  app: {flex: 1, backgroundColor: Colors.dark},
   noCamera: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  containerCamera: {
+    flex: 1,
+    marginBottom: 5,
+    borderBottomStartRadius: 40,
+    borderBottomEndRadius: 40,
+    overflow: 'hidden',
+  },
   noCameraText: {color: Colors.white},
   capture: {
-    bottom: 50,
+    bottom: 25,
     alignSelf: 'center',
     position: 'absolute',
     width: 70,
@@ -216,6 +234,24 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     color: Colors.black,
     padding: 5,
+    pointerEvents: 'box-only',
+  },
+  lowerContainer: {
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  selectableText: {
+    color: Colors.white,
+    borderWidth: 1,
+    borderRadius: 20,
+    borderColor: Colors.white,
+    paddingVertical: 3,
+    paddingHorizontal: 15,
+    textAlign: 'center',
+    // textAlignVertical: 'center',
+    fontWeight: '500',
   },
 });
 
