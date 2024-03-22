@@ -14,20 +14,23 @@ import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
 import {Colors, Icons} from './constants';
 import FastImage from 'react-native-fast-image';
 import {Polygon, Svg} from 'react-native-svg';
-const pixel = PixelRatio.get();
 
-const screenHeight = Dimensions.get('screen').height;
-const screenWidth = Dimensions.get('window').width;
-
-const permission = Camera.getCameraPermissionStatus();
-
+/////Types
 type LensProps = {
   onImageCapture: (image: string) => void;
 };
+type ControlProps = {};
 
+/////constants
 const SmsRegex = /^SMSTO:(\+[0-9]+):(.+)$/;
 const WifiRegex = /^WIFI:S:([^;]+);T:([^;]+);P:([^;]+);H:(true|false);?$/;
+const pixel = PixelRatio.get();
+const screenHeight = Dimensions.get('screen').height;
+const screenWidth = Dimensions.get('window').width;
+const permission = Camera.getCameraPermissionStatus();
+let interval: any;
 
+/////functions
 const OpenUrl = async (url: string) => {
   // console.log(url);
   try {
@@ -66,8 +69,16 @@ const OpenUrl = async (url: string) => {
   }
 };
 
-let interval: any;
+/////components
+const Controls = memo((props: ControlProps) => {
+  return (
+    <View style={styles.lowerContainer}>
+      <Text style={styles.selectableText}>{'Search'}</Text>
+    </View>
+  );
+});
 
+/////Main Screen
 const LensCamera = ({onImageCapture}: LensProps) => {
   const [Permission, setPermission] = useState(permission);
   const device = useCameraDevice('back');
@@ -177,6 +188,9 @@ const LensCamera = ({onImageCapture}: LensProps) => {
             onCodeScanned,
           }}
         />
+        <View style={styles.topContainer}>
+          <Text style={styles.Jen}>{'Jen Lens'}</Text>
+        </View>
         <Svg style={{position: 'absolute', flex: 1}} pointerEvents="none">
           <Polygon
             ref={svgPath}
@@ -212,13 +226,12 @@ const LensCamera = ({onImageCapture}: LensProps) => {
           </View>
         </Pressable>
       </View>
-      <View style={styles.lowerContainer}>
-        <Text style={styles.selectableText}>{'Search'}</Text>
-      </View>
+      <Controls />
     </View>
   );
 };
 
+/////styles
 const styles = StyleSheet.create({
   app: {flex: 1, backgroundColor: Colors.dark},
   noCamera: {
@@ -287,6 +300,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     // textAlignVertical: 'center',
     fontWeight: '500',
+  },
+  topContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+  },
+  Jen: {
+    textAlign: 'center',
+    fontSize: 20,
+    color: Colors.white,
+    fontWeight: '600',
+    textShadowColor: Colors.dark,
   },
 });
 
