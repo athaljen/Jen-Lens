@@ -10,3 +10,8 @@ export const Colors = {
 export const Icons = {search: require('./icons/search.png')};
 
 export const API_KEY = '';
+
+export enum AppScreens {
+  CameraScreen = 'CameraScreen',
+  GoogleLens = 'GoogleLens',
+}

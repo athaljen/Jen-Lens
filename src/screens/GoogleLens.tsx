@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import FastImage from 'react-native-fast-image';
-import {API_KEY, Colors} from './constants';
+import {API_KEY, AppScreens, Colors} from '../constants';
+import {ScreenProps} from '../routes/types';
 
 const densityScale = PixelRatio.get();
 
@@ -196,7 +197,8 @@ const SelectableView = (props: selectableProps) => {
   );
 };
 
-const GoogleLens = ({image}: {image: string}) => {
+const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
+  const image = route.params.image;
   const [Positions, setPositions] = useState<positions[]>([]);
   const ViewRef = useRef<any>(null);
 

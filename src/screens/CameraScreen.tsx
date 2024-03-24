@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import React, {memo, useCallback, useRef, useState} from 'react';
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
-import {Colors, Icons} from './constants';
+import {Colors, Icons} from '../constants';
 import FastImage from 'react-native-fast-image';
 import {Polygon, Svg} from 'react-native-svg';
 
@@ -79,7 +79,7 @@ const Controls = memo((props: ControlProps) => {
 });
 
 /////Main Screen
-const LensCamera = ({onImageCapture}: LensProps) => {
+const CameraScreen = ({onImageCapture}: any) => {
   const [Permission, setPermission] = useState(permission);
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
@@ -316,4 +316,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default memo(LensCamera);
+export default memo(CameraScreen);
