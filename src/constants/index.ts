@@ -7,7 +7,7 @@ export const Colors = {
   dark: '#252b2f',
 };
 
-export const Icons = {search: require('./icons/search.png')};
+export const Icons = {search: require('../icons/search.png')};
 
 export const API_KEY = '';
 

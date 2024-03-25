@@ -24,7 +24,7 @@ const Stack = createNativeStackNavigator<StackParams>();
 const Root = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
         <Stack.Screen name={AppScreens.CameraScreen} component={CameraScreen} />
         <Stack.Screen name={AppScreens.GoogleLens} component={GoogleLens} />
       </Stack.Navigator>

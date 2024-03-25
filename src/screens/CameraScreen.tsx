@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import React, {memo, useCallback, useRef, useState} from 'react';
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
-import {Colors, Icons} from '../constants';
+import {AppScreens, Colors, Icons} from '../constants';
 import FastImage from 'react-native-fast-image';
 import {Polygon, Svg} from 'react-native-svg';
+import {ScreenProps} from '../routes/types';
+import CameraScanner from '../components/CameraScanner';
 
 /////Types
 type LensProps = {
@@ -79,153 +81,12 @@ const Controls = memo((props: ControlProps) => {
 });
 
 /////Main Screen
-const CameraScreen = ({onImageCapture}: any) => {
-  const [Permission, setPermission] = useState(permission);
-  const device = useCameraDevice('back');
-  const cameraRef = useRef<Camera>(null);
-  const svgPath = useRef<any>(null);
-  const top = useRef(new Animated.Value(0)).current;
-  const left = useRef(new Animated.Value(0)).current;
-  const width = useRef(new Animated.Value(0)).current;
-
-  const [Code, setCode] = useState<string>();
-
-  const onCodeScanned = useCallback(
-    (codes: Code[]) => {
-      const data = codes[0];
-      if (
-        data.frame?.height &&
-        data.frame.width &&
-        data.frame.x &&
-        data.frame.y &&
-        data?.corners
-      ) {
-        ///clear previous timeout
-        clearTimeout(interval);
-        ///clean qr uiu if no code visible
-        interval = setTimeout(() => {
-          svgPath.current?.setNativeProps({points: '0,0 0,0 0,0 0,0'});
-          setCode(undefined);
-        }, 1000);
-
-        ///calculations
-        let {corners, frame, value} = data;
-        if (Code != value) {
-          setCode(value);
-        }
-
-        let w = frame.width / (pixel - 1);
-
-        ///for pressable text
-        const minX = Math.min(...corners.map(point => point.x));
-        const minY = Math.min(...corners.map(point => point.y));
-
-        top.setValue(minX / (pixel - 1) + frame.height / 3.8);
-        left.setValue(screenWidth - minY / (pixel - 0.85) - frame.width / 1.6);
-        width.setValue(w);
-
-        ///set svg from corners
-        const points = corners
-          .map((coord, index) => {
-            return `${
-              screenWidth -
-              (coord.y - ([2, 3].includes(index) ? -20 : 20)) / (pixel - 0.85)
-            },${
-              (coord.x - ([2, 1].includes(index) ? -20 : 20)) / (pixel - 0.99)
-            }`;
-          })
-          .join(' ');
-        svgPath.current?.setNativeProps({points: points});
-      }
-    },
-    [Code],
-  );
-
-  const askForPermission = useCallback(async () => {
-    try {
-      const response = await Camera.requestCameraPermission();
-      setPermission(response);
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
-
-  const CaptureImage = useCallback(async () => {
-    try {
-      Vibration.vibrate(80);
-      const image = await cameraRef.current?.takePhoto({
-        enableShutterSound: false,
-      });
-      if (onImageCapture && image?.path) onImageCapture(`file://${image.path}`);
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
-
-  if (!device || Permission !== 'granted') {
-    return (
-      <View style={styles.noCamera}>
-        <Text style={styles.noCameraText} onPress={askForPermission}>
-          {!device ? 'Unable to access device camera...' : 'Give Camera Access'}
-        </Text>
-      </View>
-    );
-  }
+const CameraScreen = ({}: ScreenProps<AppScreens.CameraScreen>) => {
+  const onImageCapture = useCallback(() => {}, []);
 
   return (
     <View style={styles.app}>
-      <View style={styles.containerCamera}>
-        <Camera
-          ref={cameraRef}
-          device={device}
-          style={styles.app}
-          resizeMode="cover"
-          photo
-          isActive
-          enableZoomGesture
-          codeScanner={{
-            codeTypes: ['qr', 'ean-13'],
-            onCodeScanned,
-          }}
-        />
-        <View style={styles.topContainer}>
-          <Text style={styles.Jen}>{'Jen Lens'}</Text>
-        </View>
-        <Svg style={{position: 'absolute', flex: 1}} pointerEvents="none">
-          <Polygon
-            ref={svgPath}
-            points={'0,0 0,0 0,0 0,0'}
-            fill="transparent"
-            stroke={Colors.white}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth={3}></Polygon>
-        </Svg>
-
-        {Code ? (
-          <Animated.Text
-            onPress={OpenUrl.bind(null, Code)}
-            numberOfLines={1}
-            style={[styles.text, {top: top, left: left, width: width}]}>
-            {Code}
-          </Animated.Text>
-        ) : null}
-
-        <Pressable
-          onPress={CaptureImage}
-          style={({pressed}) => [
-            styles.capture,
-            {transform: [{scale: pressed ? 0.9 : 1}]},
-          ]}>
-          <View style={styles.searchInner}>
-            <FastImage
-              style={styles.search}
-              source={Icons.search}
-              resizeMode="contain"
-            />
-          </View>
-        </Pressable>
-      </View>
+      <CameraScanner onImageCapture={onImageCapture} />
       <Controls />
     </View>
   );
