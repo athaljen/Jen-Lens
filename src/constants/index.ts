@@ -14,4 +14,5 @@ export const API_KEY = '';
 export enum AppScreens {
   CameraScreen = 'CameraScreen',
   GoogleLens = 'GoogleLens',
+  ScanScreen = 'ScanScreen',
 }

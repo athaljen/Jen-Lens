@@ -1,10 +1,5 @@
-import {View, Text} from 'react-native';
 import React, {memo} from 'react';
-import {
-  NavigationContainer,
-  NavigationContainerProps,
-  NavigationProp,
-} from '@react-navigation/native';
+import {NavigationContainer} from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   NativeStackNavigationProp,
@@ -16,7 +11,9 @@ import GoogleLens from '../screens/GoogleLens';
 export type StackParams = {
   [AppScreens.CameraScreen]: undefined;
   [AppScreens.GoogleLens]: {image: string};
+  [AppScreens.ScanScreen]: undefined;
 };
+
 export type RootNavigation = NativeStackNavigationProp<StackParams>;
 
 const Stack = createNativeStackNavigator<StackParams>();
