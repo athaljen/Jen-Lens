@@ -9,7 +9,7 @@ import {
   Text,
   Linking,
 } from 'react-native';
-import React, {memo, useCallback, useRef, useState} from 'react';
+import React, {memo, RefObject, useCallback, useRef, useState} from 'react';
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
 import {Colors, Icons} from '../constants';
 import FastImage from 'react-native-fast-image';
@@ -18,7 +18,7 @@ import ViewShot from 'react-native-view-shot';
 
 /////Types
 type Props = {
-  onImageCapture: (image: string) => void;
+  cameraRef: RefObject<Camera>;
 };
 
 /////constants
@@ -70,17 +70,17 @@ const OpenUrl = async (url: string) => {
 };
 
 /////Main component
-const CameraScanner = ({onImageCapture}: Props) => {
+const CameraScanner = ({cameraRef}: Props) => {
   const device = useCameraDevice('back');
 
-  const [Permission, setPermission] = useState(permission);
-  const [Code, setCode] = useState<string>();
-
-  const cameraRef = useRef<Camera>(null);
   const svgPath = useRef<any>(null);
   const top = useRef(new Animated.Value(0)).current;
   const left = useRef(new Animated.Value(0)).current;
   const width = useRef(new Animated.Value(0)).current;
+
+  const [Permission, setPermission] = useState(permission);
+  const [Code, setCode] = useState<string>();
+  const [Flash, setFlash] = useState(false);
 
   const onCodeScanned = useCallback(
     (codes: Code[]) => {
@@ -142,17 +142,9 @@ const CameraScanner = ({onImageCapture}: Props) => {
     }
   }, []);
 
-  const CaptureImage = useCallback(async () => {
-    try {
-      Vibration.vibrate(80);
-      const image = await cameraRef.current?.takePhoto({
-        enableShutterSound: false,
-      });
-      if (onImageCapture && image?.path) onImageCapture(`file://${image.path}`);
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
+  const handleFlash = useCallback(() => {
+    if (device) setFlash(p => !p && (device?.hasFlash || device?.hasTorch));
+  }, [device]);
 
   if (!device || Permission !== 'granted') {
     return (
@@ -165,13 +157,14 @@ const CameraScanner = ({onImageCapture}: Props) => {
   }
 
   return (
-    <View style={{flex: 1}}>
+    <View style={styles.camera}>
       <ViewShot style={styles.camera}>
         <Camera
           ref={cameraRef}
           device={device}
           style={styles.camera}
           resizeMode="cover"
+          torch={Flash ? 'on' : 'off'}
           photo
           isActive
           enableZoomGesture
@@ -180,10 +173,7 @@ const CameraScanner = ({onImageCapture}: Props) => {
             onCodeScanned,
           }}
         />
-        <View style={styles.topContainer}>
-          <Text style={styles.Jen}>{'Jen Lens'}</Text>
-        </View>
-        <Svg style={{position: 'absolute', flex: 1}} pointerEvents="none">
+        <Svg style={styles.svg} pointerEvents="none">
           <Polygon
             ref={svgPath}
             points={'0,0 0,0 0,0 0,0'}
@@ -191,9 +181,22 @@ const CameraScanner = ({onImageCapture}: Props) => {
             stroke={Colors.white}
             strokeLinejoin="round"
             strokeLinecap="round"
-            strokeWidth={3}></Polygon>
+            strokeWidth={3}
+          />
         </Svg>
       </ViewShot>
+
+      <View style={styles.topContainer}>
+        <Text style={styles.Jen}>{'Jen Lens'}</Text>
+        <Pressable onPress={handleFlash}>
+          <FastImage
+            source={Flash ? Icons.flash : Icons.flash_off}
+            style={styles.flash}
+            resizeMode="contain"
+          />
+        </Pressable>
+      </View>
+
       {Code ? (
         <Animated.Text
           onPress={OpenUrl.bind(null, Code)}
@@ -201,34 +204,22 @@ const CameraScanner = ({onImageCapture}: Props) => {
           style={[styles.text, {top: top, left: left, width: width}]}>
           {Code}
         </Animated.Text>
-      ) : null}
-
-      <Pressable
-        onPress={CaptureImage}
-        style={({pressed}) => [
-          styles.capture,
-          {transform: [{scale: pressed ? 0.9 : 1}]},
-        ]}>
-        <View style={styles.searchInner}>
-          <FastImage
-            style={styles.search}
-            source={Icons.search}
-            resizeMode="contain"
-          />
-        </View>
-      </Pressable>
+      ) : (
+        <FastImage
+          source={Icons.scan_outline}
+          style={styles.scanOutline}
+          resizeMode="contain"
+        />
+      )}
     </View>
   );
 };
 
 /////styles
 const styles = StyleSheet.create({
-  camera: {flex: 1, backgroundColor: Colors.dark},
-  noCamera: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  camera: {flex: 1},
+  noCamera: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  svg: {position: 'absolute', flex: 1},
   containerCamera: {
     flex: 1,
     marginBottom: 5,
@@ -236,35 +227,14 @@ const styles = StyleSheet.create({
     borderBottomEndRadius: 40,
     overflow: 'hidden',
   },
-  noCameraText: {color: Colors.white},
-  capture: {
-    bottom: 25,
+  scanOutline: {
+    height: screenWidth / 1.3,
+    width: screenWidth / 1.3,
     alignSelf: 'center',
     position: 'absolute',
-    width: 70,
-    padding: 3,
-    height: 70,
-    borderWidth: 2,
-    borderRadius: 35,
-    borderColor: Colors.white,
-    backgroundColor: Colors.whiteTransparent,
+    top: screenHeight / 3.5,
   },
-  searchInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 35,
-    backgroundColor: Colors.white,
-  },
-  search: {height: 25, width: 25},
-  qr: {
-    borderWidth: 2,
-    borderColor: Colors.white,
-    borderRadius: 8,
-    position: 'absolute',
-    height: 0,
-    width: 0,
-  },
+  noCameraText: {color: Colors.white},
   text: {
     position: 'absolute',
     backgroundColor: Colors.white,
@@ -296,14 +266,19 @@ const styles = StyleSheet.create({
     top: 50,
     left: 20,
     right: 20,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
   },
   Jen: {
-    textAlign: 'center',
     fontSize: 20,
     color: Colors.white,
     fontWeight: '600',
     textShadowColor: Colors.dark,
+    flex: 1,
+    textAlign: 'center',
+    marginLeft: 25,
   },
+  flash: {height: 25, width: 25},
 });
 
 export default memo(CameraScanner);

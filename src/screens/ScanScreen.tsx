@@ -1,8 +1,26 @@
-import {View, Text} from 'react-native';
-import React from 'react';
+'use strict;';
+import React, {memo} from 'react';
+import {StyleSheet, View} from 'react-native';
+import {ScreenProps} from '../routes/types';
+import {AppScreens, Colors} from '../constants';
+import FastImage from 'react-native-fast-image';
 
-const ScanScreen = () => {
-  return <View></View>;
+const ScanScreen = ({route}: ScreenProps<AppScreens.ScanScreen>) => {
+  const {image} = route.params;
+
+  return (
+    <View style={styles.ScanScreen}>
+      <FastImage
+        style={styles.ScanScreen}
+        resizeMode="stretch"
+        source={{uri: image}}
+      />
+    </View>
+  );
 };
 
-export default ScanScreen;
+const styles = StyleSheet.create({
+  ScanScreen: {flex: 1, backgroundColor: Colors.dark},
+});
+
+export default memo(ScanScreen);

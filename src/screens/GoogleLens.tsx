@@ -295,8 +295,8 @@ const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
         options={{result: 'base64', quality: 1}}>
         <FastImage
           source={{uri: image, priority: FastImage.priority.high}}
-          resizeMode="cover"
-          style={styles.imageStyle}
+          resizeMode="contain"
+          style={styles.GoogleLens}
           onLoadEnd={() => {
             setTimeout(() => {
               fetchImageDetails();
@@ -310,18 +310,14 @@ const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
 };
 
 const styles = StyleSheet.create({
-  GoogleLens: {
-    flex: 1,
-  },
+  GoogleLens: {flex: 1},
   SaveButton: {
     padding: 5,
     alignItems: 'center',
     width: '100%',
     height: 50,
     justifyContent: 'center',
-    // borderRadius: 10,
   },
-  imageStyle: {flex: 1},
   highlightedText: {
     borderRadius: 3,
     position: 'absolute',
