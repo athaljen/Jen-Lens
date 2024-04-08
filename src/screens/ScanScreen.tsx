@@ -15,12 +15,18 @@ const ScanScreen = ({route}: ScreenProps<AppScreens.ScanScreen>) => {
         resizeMode="stretch"
         source={{uri: image}}
       />
+      <View style={{height: 150}}></View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  ScanScreen: {flex: 1, backgroundColor: Colors.dark},
+  ScanScreen: {
+    flex: 1,
+    backgroundColor: Colors.dark,
+    borderBottomRightRadius: 25,
+    borderBottomLeftRadius: 25,
+  },
 });
 
 export default memo(ScanScreen);

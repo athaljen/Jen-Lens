@@ -2,14 +2,20 @@ import {
   View,
   Pressable,
   StyleSheet,
-  Vibration,
   Animated,
   PixelRatio,
   Dimensions,
   Text,
   Linking,
 } from 'react-native';
-import React, {memo, RefObject, useCallback, useRef, useState} from 'react';
+import React, {
+  memo,
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
 import {Colors, Icons} from '../constants';
 import FastImage from 'react-native-fast-image';
@@ -142,6 +148,10 @@ const CameraScanner = ({cameraRef}: Props) => {
     }
   }, []);
 
+  useEffect(() => {
+    askForPermission();
+  }, []);
+
   const handleFlash = useCallback(() => {
     if (device) setFlash(p => !p && (device?.hasFlash || device?.hasTorch));
   }, [device]);
@@ -157,7 +167,7 @@ const CameraScanner = ({cameraRef}: Props) => {
   }
 
   return (
-    <View style={styles.camera}>
+    <View style={styles.cameraComp}>
       <ViewShot style={styles.camera}>
         <Camera
           ref={cameraRef}
@@ -193,6 +203,7 @@ const CameraScanner = ({cameraRef}: Props) => {
             source={Flash ? Icons.flash : Icons.flash_off}
             style={styles.flash}
             resizeMode="contain"
+            tintColor={Colors.white}
           />
         </Pressable>
       </View>
@@ -218,6 +229,12 @@ const CameraScanner = ({cameraRef}: Props) => {
 /////styles
 const styles = StyleSheet.create({
   camera: {flex: 1},
+  cameraComp: {
+    flex: 1,
+    borderBottomRightRadius: 25,
+    borderBottomLeftRadius: 25,
+    overflow: 'hidden',
+  },
   noCamera: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   svg: {position: 'absolute', flex: 1},
   containerCamera: {

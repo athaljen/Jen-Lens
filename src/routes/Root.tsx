@@ -4,10 +4,11 @@ import {
   createNativeStackNavigator,
   NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
-import {AppScreens} from '../constants';
+import {AppScreens, Colors} from '../constants';
 import CameraScreen from '../screens/CameraScreen';
 import GoogleLens from '../screens/GoogleLens';
 import ScanScreen from '../screens/ScanScreen';
+import {StyleSheet} from 'react-native';
 
 export type StackParams = {
   [AppScreens.CameraScreen]: undefined;
@@ -22,7 +23,12 @@ const Stack = createNativeStackNavigator<StackParams>();
 const Root = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: styles.contentStyle,
+        }}>
         <Stack.Screen name={AppScreens.CameraScreen} component={CameraScreen} />
         <Stack.Screen name={AppScreens.ScanScreen} component={ScanScreen} />
         <Stack.Screen name={AppScreens.GoogleLens} component={GoogleLens} />
@@ -31,4 +37,7 @@ const Root = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  contentStyle: {backgroundColor: Colors.dark},
+});
 export default memo(Root);
