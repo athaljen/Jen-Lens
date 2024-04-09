@@ -25,6 +25,7 @@ import ViewShot from 'react-native-view-shot';
 /////Types
 type Props = {
   cameraRef: RefObject<Camera>;
+  viewShotRef: RefObject<ViewShot>;
 };
 
 /////constants
@@ -76,7 +77,7 @@ const OpenUrl = async (url: string) => {
 };
 
 /////Main component
-const CameraScanner = ({cameraRef}: Props) => {
+const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
   const device = useCameraDevice('back');
 
   const svgPath = useRef<any>(null);
@@ -152,7 +153,7 @@ const CameraScanner = ({cameraRef}: Props) => {
     askForPermission();
   }, []);
 
-  const handleFlash = useCallback(() => {
+  const toggleFlash = useCallback(() => {
     if (device) setFlash(p => !p && (device?.hasFlash || device?.hasTorch));
   }, [device]);
 
@@ -168,37 +169,39 @@ const CameraScanner = ({cameraRef}: Props) => {
 
   return (
     <View style={styles.cameraComp}>
-      <ViewShot style={styles.camera}>
-        <Camera
-          ref={cameraRef}
-          device={device}
-          style={styles.camera}
-          resizeMode="cover"
-          torch={Flash ? 'on' : 'off'}
-          photo
-          isActive
-          enableZoomGesture
-          codeScanner={{
-            codeTypes: ['qr', 'ean-13'],
-            onCodeScanned,
-          }}
-        />
-        <Svg style={styles.svg} pointerEvents="none">
-          <Polygon
-            ref={svgPath}
-            points={'0,0 0,0 0,0 0,0'}
-            fill="transparent"
-            stroke={Colors.white}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth={3}
+      <ViewShot style={styles.camera} ref={viewShotRef}>
+        <View style={{backgroundColor: 'red', flex: 1}}>
+          <Camera
+            ref={cameraRef}
+            device={device}
+            style={styles.camera}
+            resizeMode="cover"
+            torch={Flash ? 'on' : 'off'}
+            photo
+            isActive
+            enableZoomGesture
+            codeScanner={{
+              codeTypes: ['qr', 'ean-13'],
+              onCodeScanned,
+            }}
           />
-        </Svg>
+          <Svg style={styles.svg} pointerEvents="none">
+            <Polygon
+              ref={svgPath}
+              points={'0,0 0,0 0,0 0,0'}
+              fill="transparent"
+              stroke={Colors.white}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              strokeWidth={3}
+            />
+          </Svg>
+        </View>
       </ViewShot>
 
       <View style={styles.topContainer}>
         <Text style={styles.Jen}>{'Jen Lens'}</Text>
-        <Pressable onPress={handleFlash}>
+        <Pressable onPress={toggleFlash}>
           <FastImage
             source={Flash ? Icons.flash : Icons.flash_off}
             style={styles.flash}

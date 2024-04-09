@@ -12,6 +12,7 @@ import {ScreenProps} from '../routes/types';
 import CameraScanner from '../components/CameraScanner';
 import FastImage from 'react-native-fast-image';
 import {Camera} from 'react-native-vision-camera';
+import ViewShot from 'react-native-view-shot';
 
 ///types
 type ControlProps = {
@@ -86,20 +87,21 @@ const Controls = memo(({onImageCapture}: ControlProps) => {
 /////Main Screen
 const CameraScreen = ({navigation}: ScreenProps<AppScreens.CameraScreen>) => {
   const cameraRef = useRef<Camera>(null);
+  const viewShotRef = useRef<ViewShot>(null);
 
   const onImageCapture = useCallback(async (type: ActionType) => {
     try {
-      const image = await cameraRef.current?.takePhoto({
-        enableAutoDistortionCorrection: true,
-        enableAutoStabilization: true,
-        qualityPrioritization: 'quality',
-      });
-      if (!image) return;
-      const formatImage = `${isAndroid ? 'file://' : 'file:/'}${image.path}`;
-
-      if (type === 'Scan') {
-        navigation.navigate(AppScreens.ScanScreen, {image: formatImage});
+      if (type === 'Scan' && viewShotRef.current?.capture) {
+        const image = await viewShotRef.current?.capture();
+        navigation.navigate(AppScreens.ScanScreen, {image: image});
       } else if (type === 'Search') {
+        const image = await cameraRef.current?.takePhoto({
+          enableAutoDistortionCorrection: true,
+          enableAutoStabilization: true,
+          qualityPrioritization: 'quality',
+        });
+        if (!image) return;
+        const formatImage = `${isAndroid ? 'file://' : 'file:/'}${image.path}`;
         navigation.navigate(AppScreens.GoogleLens, {image: formatImage});
       }
     } catch (error) {}
@@ -107,7 +109,7 @@ const CameraScreen = ({navigation}: ScreenProps<AppScreens.CameraScreen>) => {
 
   return (
     <View style={styles.app}>
-      <CameraScanner cameraRef={cameraRef} />
+      <CameraScanner cameraRef={cameraRef} viewShotRef={viewShotRef} />
       <Controls onImageCapture={onImageCapture} />
     </View>
   );
