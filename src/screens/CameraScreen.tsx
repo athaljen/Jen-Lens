@@ -1,12 +1,5 @@
-import {
-  View,
-  StyleSheet,
-  Text,
-  ScrollView,
-  Pressable,
-  Vibration,
-} from 'react-native';
-import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
+import {View, StyleSheet, Text, Pressable, Vibration} from 'react-native';
+import React, {memo, useCallback, useRef, useState} from 'react';
 import {AppScreens, Colors, Icons, isAndroid} from '../constants';
 import {ScreenProps} from '../routes/types';
 import CameraScanner from '../components/CameraScanner';
@@ -97,8 +90,8 @@ const CameraScreen = ({navigation}: ScreenProps<AppScreens.CameraScreen>) => {
       } else if (type === 'Search') {
         const image = await cameraRef.current?.takePhoto({
           enableAutoDistortionCorrection: true,
-          enableAutoStabilization: true,
-          qualityPrioritization: 'quality',
+          // enableAutoStabilization: true,
+          // qualityPrioritization: 'quality',
         });
         if (!image) return;
         const formatImage = `${isAndroid ? 'file://' : 'file:/'}${image.path}`;

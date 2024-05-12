@@ -19,13 +19,21 @@ import React, {
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
 import {Colors, Icons} from '../constants';
 import FastImage from 'react-native-fast-image';
-import {Polygon, Svg} from 'react-native-svg';
+import {Path, Polygon, Svg} from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
 
 /////Types
 type Props = {
   cameraRef: RefObject<Camera>;
   viewShotRef: RefObject<ViewShot>;
+};
+
+type getPathArgs = {
+  top?: number;
+  left?: number;
+  height?: number;
+  width?: number;
+  radius?: number;
 };
 
 /////constants
@@ -76,11 +84,29 @@ const OpenUrl = async (url: string) => {
   }
 };
 
+const MainPath = `M-3,-3H${screenWidth + 3}V${screenHeight + 3}H-3V-3Z`;
+
+const getPath = ({top, left, height, width, radius}: getPathArgs) => {
+  return (
+    MainPath +
+    `M${left},${top}
+  h${width}
+  a${radius},${radius} 0 0 1 ${radius},${radius}
+  v${height}
+  a${radius},${radius} 0 0 1 -${radius},${radius}
+  h-${width}
+  a${radius},${radius} 0 0 1 -${radius},-${radius}
+  v-${height}
+  a${radius},${radius} 0 0 1 ${radius},-${radius} Z`
+  );
+};
+
 /////Main component
 const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
   const device = useCameraDevice('back');
 
   const svgPath = useRef<any>(null);
+  const pathRef = useRef<Path>(null);
   const top = useRef(new Animated.Value(0)).current;
   const left = useRef(new Animated.Value(0)).current;
   const width = useRef(new Animated.Value(0)).current;
@@ -135,6 +161,17 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
           })
           .join(' ');
         svgPath.current?.setNativeProps({points: points});
+
+        ///path
+
+        const d = getPath({
+          top: minY * (pixel - 0.85),
+          left: minX * (pixel - 0.99),
+          height: data.frame.height * 1.3,
+          width: data.frame.width * 1.3,
+          radius: 10,
+        });
+        pathRef.current?.setNativeProps({d});
       }
     },
     [Code],
@@ -169,37 +206,41 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
 
   return (
     <View style={styles.cameraComp}>
-      <ViewShot style={styles.camera} ref={viewShotRef}>
-        <View style={{backgroundColor: 'red', flex: 1}}>
-          <Camera
-            ref={cameraRef}
-            device={device}
-            style={styles.camera}
-            resizeMode="cover"
-            torch={Flash ? 'on' : 'off'}
-            photo
-            isActive
-            enableZoomGesture
-            codeScanner={{
-              codeTypes: ['qr', 'ean-13'],
-              onCodeScanned,
-            }}
-          />
-          <Svg style={styles.svg} pointerEvents="none">
-            <Polygon
-              ref={svgPath}
-              points={'0,0 0,0 0,0 0,0'}
-              fill="transparent"
-              stroke={Colors.white}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              strokeWidth={3}
-            />
-          </Svg>
-        </View>
-      </ViewShot>
+      <Camera
+        ref={cameraRef}
+        device={device}
+        style={styles.camera}
+        resizeMode="cover"
+        torch={Flash ? 'on' : 'off'}
+        photo
+        isActive
+        enableZoomGesture
+        codeScanner={{
+          codeTypes: ['qr', 'ean-13'],
+          onCodeScanned,
+        }}
+      />
+      <Svg style={styles.svg} pointerEvents="none">
+        {/* <Polygon
+          ref={svgPath}
+          points={'0,0 0,0 0,0 0,0'}
+          fill="transparent"
+          stroke={Colors.white}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          strokeWidth={3}
+        /> */}
+        <Path
+          ref={pathRef}
+          d={''}
+          fill="rgba(0, 0, 0, 0.34)"
+          fillRule="evenodd"
+          strokeWidth={2}
+          stroke={'#ffffff'}
+        />
+      </Svg>
 
-      <View style={styles.topContainer}>
+      {/* <View style={styles.topContainer}>
         <Text style={styles.Jen}>{'Jen Lens'}</Text>
         <Pressable onPress={toggleFlash}>
           <FastImage
@@ -209,22 +250,23 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
             tintColor={Colors.white}
           />
         </Pressable>
-      </View>
+      </View> */}
 
-      {Code ? (
-        <Animated.Text
-          onPress={OpenUrl.bind(null, Code)}
-          numberOfLines={1}
-          style={[styles.text, {top: top, left: left, width: width}]}>
-          {Code}
-        </Animated.Text>
-      ) : (
-        <FastImage
-          source={Icons.scan_outline}
-          style={styles.scanOutline}
-          resizeMode="contain"
-        />
-      )}
+      {
+        Code ? (
+          <Animated.Text
+            onPress={OpenUrl.bind(null, Code)}
+            numberOfLines={1}
+            style={[styles.text, {top: top, left: left, width: width}]}>
+            {Code}
+          </Animated.Text>
+        ) : null
+        // <FastImage
+        //   source={Icons.scan_outline}
+        //   style={styles.scanOutline}
+        //   resizeMode="contain"
+        // />
+      }
     </View>
   );
 };
