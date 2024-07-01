@@ -19,7 +19,7 @@ import React, {
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
 import {Colors, Icons} from '../constants';
 import FastImage from 'react-native-fast-image';
-import {Polygon, Svg} from 'react-native-svg';
+import {Path, Polygon, Svg} from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
 
 /////Types
@@ -76,11 +76,38 @@ const OpenUrl = async (url: string) => {
   }
 };
 
+type getPathArgs = {
+  top?: number;
+  left?: number;
+  height?: number;
+  width?: number;
+  radius?: number;
+};
+
+const {height, width} = Dimensions.get('screen');
+const MainPath = `M-3,-3H${width + 3}V${height + 3}H-3V-3Z`;
+
+const getPath = ({top, left, height, width, radius}: getPathArgs) => {
+  return (
+    MainPath +
+    `M${left},${top}
+  h${width}
+  a${radius},${radius} 0 0 1 ${radius},${radius}
+  v${height}
+  a${radius},${radius} 0 0 1 -${radius},${radius}
+  h-${width}
+  a${radius},${radius} 0 0 1 -${radius},-${radius}
+  v-${height}
+  a${radius},${radius} 0 0 1 ${radius},-${radius} Z`
+  );
+};
+
 /////Main component
 const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
   const device = useCameraDevice('back');
 
-  const svgPath = useRef<any>(null);
+  const polygonRef = useRef<any>(null);
+  const pathRef = useRef<any>(null);
   const top = useRef(new Animated.Value(0)).current;
   const left = useRef(new Animated.Value(0)).current;
   const width = useRef(new Animated.Value(0)).current;
@@ -103,7 +130,11 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
         clearTimeout(interval);
         ///clean qr uiu if no code visible
         interval = setTimeout(() => {
-          svgPath.current?.setNativeProps({points: '0,0 0,0 0,0 0,0'});
+          // polygonRef.current?.setNativeProps({points: '0,0 0,0 0,0 0,0'});
+          pathRef.current?.setNativeProps({
+            d: MainPath,
+            fill: 'rgba(255, 255, 255, 0)',
+          });
           setCode(undefined);
         }, 1000);
 
@@ -119,22 +150,33 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
         const minX = Math.min(...corners.map(point => point.x));
         const minY = Math.min(...corners.map(point => point.y));
 
-        top.setValue(minX / (pixel - 1) + frame.height / 3.8);
+        top.setValue(minX / (pixel - 0.9) + frame.height / pixel);
         left.setValue(screenWidth - minY / (pixel - 0.85) - frame.width / 1.6);
         width.setValue(w);
 
         ///set svg from corners
-        const points = corners
-          .map((coord, index) => {
-            return `${
-              screenWidth -
-              (coord.y - ([2, 3].includes(index) ? -20 : 20)) / (pixel - 0.85)
-            },${
-              (coord.x - ([2, 1].includes(index) ? -20 : 20)) / (pixel - 0.99)
-            }`;
-          })
-          .join(' ');
-        svgPath.current?.setNativeProps({points: points});
+        // const points = corners
+        //   .map((coord, index) => {
+        //     return `${
+        //       screenWidth -
+        //       (coord.y - ([2, 3].includes(index) ? -20 : 20)) / (pixel - 0.85)
+        //     },${
+        //       (coord.x - ([2, 1].includes(index) ? -20 : 20)) / (pixel - 0.99)
+        //     }`;
+        //   })
+        //   .join(' ');
+        // polygonRef.current?.setNativeProps({points: points});
+
+        pathRef.current?.setNativeProps({
+          d: getPath({
+            top: minX / (pixel - 0.9),
+            left: screenWidth - minY / (pixel - 0.85) - frame.width / 1.6,
+            width: w,
+            height: w,
+            radius: 15,
+          }),
+          fill: 'rgba(0, 0, 0, 0.39)',
+        });
       }
     },
     [Code],
@@ -186,14 +228,23 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
             }}
           />
           <Svg style={styles.svg} pointerEvents="none">
-            <Polygon
-              ref={svgPath}
+            {/* <Polygon
+              ref={polygonRef}
               points={'0,0 0,0 0,0 0,0'}
               fill="transparent"
               stroke={Colors.white}
               strokeLinejoin="round"
               strokeLinecap="round"
               strokeWidth={3}
+            /> */}
+
+            <Path
+              d={MainPath}
+              ref={pathRef}
+              fill="rgba(255, 255, 255, 0)"
+              fillRule="evenodd"
+              strokeWidth={3}
+              stroke={'#ffffff'}
             />
           </Svg>
         </View>
@@ -218,13 +269,12 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
           style={[styles.text, {top: top, left: left, width: width}]}>
           {Code}
         </Animated.Text>
-      ) : (
-        <FastImage
-          source={Icons.scan_outline}
-          style={styles.scanOutline}
-          resizeMode="contain"
-        />
-      )}
+      ) : null}
+      <FastImage
+        source={Icons.scan_outline}
+        style={styles.scanOutline}
+        resizeMode="contain"
+      />
     </View>
   );
 };

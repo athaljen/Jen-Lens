@@ -1,5 +1,6 @@
 import React, {RefObject, memo, useCallback, useRef, useState} from 'react';
 import {
+  Alert,
   GestureResponderEvent,
   PanResponder,
   PixelRatio,
@@ -13,10 +14,9 @@ import FastImage from 'react-native-fast-image';
 import {API_KEY, AppScreens, Colors} from '../constants';
 import {ScreenProps} from '../routes/types';
 
-const densityScale = PixelRatio.get();
-
 const VISION_API = `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`;
 
+const densityScale = PixelRatio.get();
 ///////////
 // types //
 ///////////
@@ -203,6 +203,14 @@ const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
   const ViewRef = useRef<any>(null);
 
   const fetchImageDetails = async () => {
+    if (!API_KEY) {
+      Alert.alert(
+        'API Key not found',
+        'Please add your google API key in constants in order to use the google lens feature.',
+      );
+      return;
+    }
+
     try {
       const Base64 = await ViewRef.current?.capture();
       const body = {

@@ -1,4 +1,5 @@
 import {Platform} from 'react-native';
+import {VISION_API_KEY} from '@env';
 
 export const Colors = {
   white: '#ffffff',
@@ -17,7 +18,7 @@ export const Icons = {
   qr_code: require('../icons/qr_code.png'),
 };
 
-export const API_KEY = '';
+export const API_KEY = VISION_API_KEY;
 
 export const isIos = Platform.OS === 'ios';
 export const isAndroid = Platform.OS === 'android';
