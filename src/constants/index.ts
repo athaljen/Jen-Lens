@@ -8,6 +8,7 @@ export const Colors = {
   selected: '#2581be82',
   highlighted: '#ffffff47',
   dark: '#252b2f',
+  blue: '#559cff',
 };
 
 export const Icons = {
@@ -23,8 +24,8 @@ export const API_KEY = VISION_API_KEY;
 export const isIos = Platform.OS === 'ios';
 export const isAndroid = Platform.OS === 'android';
 
-export enum AppScreens {
-  CameraScreen = 'CameraScreen',
-  GoogleLens = 'GoogleLens',
-  ScanScreen = 'ScanScreen',
-}
+export const AppScreens = Object.freeze({
+  CameraScreen: 'CameraScreen',
+  GoogleLens: 'GoogleLens',
+  ScanScreen: 'ScanScreen',
+});

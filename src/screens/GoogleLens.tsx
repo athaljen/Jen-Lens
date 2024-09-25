@@ -197,7 +197,7 @@ const SelectableView = (props: selectableProps) => {
   );
 };
 
-const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
+const GoogleLens = ({route}: ScreenProps<'GoogleLens'>) => {
   const image = route.params.image;
   const [Positions, setPositions] = useState<positions[]>([]);
   const ViewRef = useRef<any>(null);

@@ -17,10 +17,11 @@ import React, {
   useState,
 } from 'react';
 import {Camera, Code, useCameraDevice} from 'react-native-vision-camera';
-import {Colors, Icons} from '../constants';
+import {Colors, Icons, isAndroid} from '../constants';
 import FastImage from 'react-native-fast-image';
 import {Path, Polygon, Svg} from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 /////Types
 type Props = {
@@ -28,23 +29,31 @@ type Props = {
   viewShotRef: RefObject<ViewShot>;
 };
 
+type getPathArgs = {
+  top?: number;
+  left?: number;
+  height?: number;
+  width?: number;
+  radius?: number;
+};
+
 /////constants
 const SmsRegex = /^SMSTO:(\+[0-9]+):(.+)$/;
 const WifiRegex = /^WIFI:S:([^;]+);T:([^;]+);P:([^;]+);H:(true|false);?$/;
 const pixel = PixelRatio.get();
 const screenHeight = Dimensions.get('screen').height;
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get('screen').width;
 const permission = Camera.getCameraPermissionStatus();
+
+const MainPath = `M-3,-3H${screenWidth + 3}V${screenHeight + 3}H-3V-3Z`;
 let interval: any;
 
 /////functions
 const OpenUrl = async (url: string) => {
-  // console.log(url);
   try {
     let ModifiedUrl = '';
     const match = url.match(SmsRegex);
     const match1 = url.match(WifiRegex);
-    console.log(match1);
 
     if (url?.toLowerCase()?.includes('http')) {
       ModifiedUrl = url;
@@ -55,8 +64,6 @@ const OpenUrl = async (url: string) => {
         messageBody,
       )}`;
     } else if (match1 && match1.length === 5) {
-      console.log('called');
-
       const ssid = match1[1];
       const securityType = match1[2];
       const password = match1[3];
@@ -75,17 +82,6 @@ const OpenUrl = async (url: string) => {
     console.log(error);
   }
 };
-
-type getPathArgs = {
-  top?: number;
-  left?: number;
-  height?: number;
-  width?: number;
-  radius?: number;
-};
-
-const {height, width} = Dimensions.get('screen');
-const MainPath = `M-3,-3H${width + 3}V${height + 3}H-3V-3Z`;
 
 const getPath = ({top, left, height, width, radius}: getPathArgs) => {
   return (
@@ -106,11 +102,11 @@ const getPath = ({top, left, height, width, radius}: getPathArgs) => {
 const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
   const device = useCameraDevice('back');
 
-  const polygonRef = useRef<any>(null);
   const pathRef = useRef<any>(null);
-  const top = useRef(new Animated.Value(0)).current;
-  const left = useRef(new Animated.Value(0)).current;
+  const pTop = useRef(new Animated.Value(0)).current;
+  const pLeft = useRef(new Animated.Value(0)).current;
   const width = useRef(new Animated.Value(0)).current;
+  const {top} = useSafeAreaInsets();
 
   const [Permission, setPermission] = useState(permission);
   const [Code, setCode] = useState<string>();
@@ -130,13 +126,12 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
         clearTimeout(interval);
         ///clean qr uiu if no code visible
         interval = setTimeout(() => {
-          // polygonRef.current?.setNativeProps({points: '0,0 0,0 0,0 0,0'});
           pathRef.current?.setNativeProps({
             d: MainPath,
             fill: 'rgba(255, 255, 255, 0)',
           });
           setCode(undefined);
-        }, 1000);
+        }, 500);
 
         ///calculations
         let {corners, frame, value} = data;
@@ -144,39 +139,43 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
           setCode(value);
         }
 
-        let w = frame.width / (pixel - 1);
-
         ///for pressable text
-        const minX = Math.min(...corners.map(point => point.x));
-        const minY = Math.min(...corners.map(point => point.y));
+        // const minX = Math.min(...corners.map(point => point.x));
+        // const minY = Math.min(...corners.map(point => point.y));
 
-        top.setValue(minX / (pixel - 0.9) + frame.height / pixel);
-        left.setValue(screenWidth - minY / (pixel - 0.85) - frame.width / 1.6);
-        width.setValue(w);
-
-        ///set svg from corners
-        // const points = corners
-        //   .map((coord, index) => {
-        //     return `${
-        //       screenWidth -
-        //       (coord.y - ([2, 3].includes(index) ? -20 : 20)) / (pixel - 0.85)
-        //     },${
-        //       (coord.x - ([2, 1].includes(index) ? -20 : 20)) / (pixel - 0.99)
-        //     }`;
-        //   })
-        //   .join(' ');
-        // polygonRef.current?.setNativeProps({points: points});
-
-        pathRef.current?.setNativeProps({
-          d: getPath({
-            top: minX / (pixel - 0.9),
-            left: screenWidth - minY / (pixel - 0.85) - frame.width / 1.6,
-            width: w,
-            height: w,
-            radius: 15,
-          }),
-          fill: 'rgba(0, 0, 0, 0.39)',
-        });
+        if (isAndroid) {
+          pTop.setValue(frame.x / (pixel - 0.9) + frame.height / pixel);
+          pLeft.setValue(
+            screenWidth - frame.y / (pixel - 0.85) - frame.width / 1.6,
+          );
+          width.setValue(frame.width / (pixel - 1));
+          pathRef.current?.setNativeProps({
+            d: getPath({
+              top: frame.x / (pixel - 0.9),
+              left: screenWidth - frame.y / (pixel - 0.85) - frame.width / 1.6,
+              width: frame.width / (pixel - 1),
+              height: frame.height / (pixel - 1),
+              radius: 15,
+            }),
+            fill: 'rgba(0, 0, 0, 0.2)',
+          });
+        } else {
+          pTop.setValue(frame.x / (pixel + 0.49) + frame.height / pixel / 2);
+          pLeft.setValue(
+            screenWidth - frame.y / (pixel + 0.89) - frame.width / 2,
+          );
+          width.setValue(frame.width / pixel);
+          pathRef.current?.setNativeProps({
+            d: getPath({
+              top: frame.x / (pixel + 0.49),
+              left: screenWidth - frame.y / (pixel + 0.89) - frame.width / 2,
+              width: frame.width / pixel,
+              height: frame.width / pixel,
+              radius: 15,
+            }),
+            fill: 'rgba(0, 0, 0, 0.2)',
+          });
+        }
       }
     },
     [Code],
@@ -212,45 +211,33 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
   return (
     <View style={styles.cameraComp}>
       <ViewShot style={styles.camera} ref={viewShotRef}>
-        <View style={{backgroundColor: 'red', flex: 1}}>
-          <Camera
-            ref={cameraRef}
-            device={device}
-            style={styles.camera}
-            resizeMode="cover"
-            torch={Flash ? 'on' : 'off'}
-            photo
-            isActive
-            enableZoomGesture
-            codeScanner={{
-              codeTypes: ['qr', 'ean-13'],
-              onCodeScanned,
-            }}
+        <Camera
+          ref={cameraRef}
+          device={device}
+          style={styles.camera}
+          resizeMode="cover"
+          torch={Flash ? 'on' : 'off'}
+          photo
+          isActive
+          enableZoomGesture
+          codeScanner={{
+            codeTypes: ['qr', 'ean-13'],
+            onCodeScanned,
+          }}
+        />
+        <Svg style={styles.svg} pointerEvents="none">
+          <Path
+            d={MainPath}
+            ref={pathRef}
+            fill="rgba(255, 255, 255, 0)"
+            fillRule="evenodd"
+            strokeWidth={3}
+            stroke={'#ffffff'}
           />
-          <Svg style={styles.svg} pointerEvents="none">
-            {/* <Polygon
-              ref={polygonRef}
-              points={'0,0 0,0 0,0 0,0'}
-              fill="transparent"
-              stroke={Colors.white}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              strokeWidth={3}
-            /> */}
-
-            <Path
-              d={MainPath}
-              ref={pathRef}
-              fill="rgba(255, 255, 255, 0)"
-              fillRule="evenodd"
-              strokeWidth={3}
-              stroke={'#ffffff'}
-            />
-          </Svg>
-        </View>
+        </Svg>
       </ViewShot>
 
-      <View style={styles.topContainer}>
+      <View style={[styles.topContainer, {top: top + 15}]}>
         <Text style={styles.Jen}>{'Jen Lens'}</Text>
         <Pressable onPress={toggleFlash}>
           <FastImage
@@ -266,7 +253,7 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
         <Animated.Text
           onPress={OpenUrl.bind(null, Code)}
           numberOfLines={1}
-          style={[styles.text, {top: top, left: left, width: width}]}>
+          style={[styles.text, {top: pTop, left: pLeft, width: width}]}>
           {Code}
         </Animated.Text>
       ) : null}
@@ -308,11 +295,13 @@ const styles = StyleSheet.create({
   text: {
     position: 'absolute',
     backgroundColor: Colors.white,
+    fontWeight: '500',
     borderRadius: 8,
     flexShrink: 1,
-    color: Colors.black,
+    color: Colors.blue,
     padding: 10,
     pointerEvents: 'box-only',
+    zIndex: 100,
   },
   lowerContainer: {
     height: 50,
@@ -333,7 +322,6 @@ const styles = StyleSheet.create({
   },
   topContainer: {
     position: 'absolute',
-    top: 50,
     left: 20,
     right: 20,
     justifyContent: 'space-between',
@@ -352,3 +340,21 @@ const styles = StyleSheet.create({
 });
 
 export default memo(CameraScanner);
+
+///unused code
+// const polygonRef = useRef<any>(null);
+
+// polygonRef.current?.setNativeProps({points: '0,0 0,0 0,0 0,0'});
+
+///set svg from corners
+// const points = corners
+//   .map((coord, index) => {
+//     return `${
+//       screenWidth -
+//       (coord.y - ([2, 3].includes(index) ? -20 : 20)) / (pixel - 0.85)
+//     },${
+//       (coord.x - ([2, 1].includes(index) ? -20 : 20)) / (pixel - 0.99)
+//     }`;
+//   })
+//   .join(' ');
+// polygonRef.current?.setNativeProps({points: points});

@@ -9,6 +9,7 @@ import CameraScreen from '../screens/CameraScreen';
 import GoogleLens from '../screens/GoogleLens';
 import ScanScreen from '../screens/ScanScreen';
 import {StyleSheet} from 'react-native';
+import GoogleLensNew from '../screens/GoogleLensNew';
 
 export type StackParams = {
   [AppScreens.CameraScreen]: undefined;
@@ -28,6 +29,7 @@ const Root = () => {
           headerShown: false,
           animation: 'fade',
           contentStyle: styles.contentStyle,
+          navigationBarColor: Colors.dark,
         }}>
         <Stack.Screen name={AppScreens.CameraScreen} component={CameraScreen} />
         <Stack.Screen name={AppScreens.ScanScreen} component={ScanScreen} />

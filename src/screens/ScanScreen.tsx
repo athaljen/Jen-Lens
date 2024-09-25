@@ -5,7 +5,7 @@ import {ScreenProps} from '../routes/types';
 import {AppScreens, Colors} from '../constants';
 import FastImage from 'react-native-fast-image';
 
-const ScanScreen = ({route}: ScreenProps<AppScreens.ScanScreen>) => {
+const ScanScreen = ({route}: ScreenProps<'ScanScreen'>) => {
   const {image} = route.params;
 
   return (

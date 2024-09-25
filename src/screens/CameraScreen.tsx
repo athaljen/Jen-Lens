@@ -1,18 +1,12 @@
-import {
-  View,
-  StyleSheet,
-  Text,
-  ScrollView,
-  Pressable,
-  Vibration,
-} from 'react-native';
-import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
+import {View, StyleSheet, Text, Pressable, Vibration} from 'react-native';
+import React, {memo, useCallback, useRef, useState} from 'react';
 import {AppScreens, Colors, Icons, isAndroid} from '../constants';
 import {ScreenProps} from '../routes/types';
 import CameraScanner from '../components/CameraScanner';
 import FastImage from 'react-native-fast-image';
 import {Camera} from 'react-native-vision-camera';
 import ViewShot from 'react-native-view-shot';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 ///types
 type ControlProps = {
@@ -85,9 +79,10 @@ const Controls = memo(({onImageCapture}: ControlProps) => {
 });
 
 /////Main Screen
-const CameraScreen = ({navigation}: ScreenProps<AppScreens.CameraScreen>) => {
+const CameraScreen = ({navigation}: ScreenProps<'CameraScreen'>) => {
   const cameraRef = useRef<Camera>(null);
   const viewShotRef = useRef<ViewShot>(null);
+  const {bottom} = useSafeAreaInsets();
 
   const onImageCapture = useCallback(async (type: ActionType) => {
     try {
@@ -108,7 +103,7 @@ const CameraScreen = ({navigation}: ScreenProps<AppScreens.CameraScreen>) => {
   }, []);
 
   return (
-    <View style={styles.app}>
+    <View style={[styles.screen, {bottom: bottom / 2}]}>
       <CameraScanner cameraRef={cameraRef} viewShotRef={viewShotRef} />
       <Controls onImageCapture={onImageCapture} />
     </View>
@@ -117,19 +112,18 @@ const CameraScreen = ({navigation}: ScreenProps<AppScreens.CameraScreen>) => {
 
 /////styles
 const styles = StyleSheet.create({
-  app: {flex: 1, backgroundColor: Colors.dark},
+  screen: {flex: 1, backgroundColor: Colors.dark},
   lowerContainer: {
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
-  scrollView: {backgroundColor: 'red'},
   selectable: {
     borderWidth: 1,
     borderRadius: 20,
     borderColor: Colors.white,
-    paddingVertical: 3,
+    paddingVertical: 5,
     paddingHorizontal: 15,
     marginHorizontal: 10,
     flexDirection: 'row',
