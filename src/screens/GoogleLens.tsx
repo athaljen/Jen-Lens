@@ -5,6 +5,7 @@ import {
   PixelRatio,
   Pressable,
   StyleSheet,
+  Text,
   Vibration,
   View,
 } from 'react-native';
@@ -201,6 +202,7 @@ const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
   const image = route.params.image;
   const [Positions, setPositions] = useState<positions[]>([]);
   const ViewRef = useRef<any>(null);
+  const [Texts, setTexts] = useState('');
 
   const fetchImageDetails = async () => {
     try {
@@ -231,6 +233,12 @@ const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log(response);
+
+        setTexts(
+          result?.responses?.[0]?.fullTextAnnotation?.text || 'No Text found',
+        );
+        return;
         const filtered: VisionApiResponse =
           result.responses[0].textAnnotations?.slice(1);
 
@@ -289,22 +297,33 @@ const GoogleLens = ({route}: ScreenProps<AppScreens.GoogleLens>) => {
 
   return (
     <View style={[styles.GoogleLens]}>
-      <ViewShot
-        style={styles.GoogleLens}
-        ref={ViewRef}
-        options={{result: 'base64', quality: 1}}>
-        <FastImage
-          source={{uri: image, priority: FastImage.priority.high}}
-          resizeMode="contain"
+      {Texts ? (
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'white',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text style={{color: 'black'}}>{Texts}</Text>
+        </View>
+      ) : (
+        <ViewShot
           style={styles.GoogleLens}
-          onLoadEnd={() => {
-            setTimeout(() => {
-              fetchImageDetails();
-            }, 200);
-          }}
-        />
-      </ViewShot>
-      <SelectableView Positions={Positions} />
+          ref={ViewRef}
+          options={{result: 'base64', quality: 1}}>
+          <FastImage
+            source={{uri: image, priority: FastImage.priority.high}}
+            resizeMode="contain"
+            style={styles.GoogleLens}
+            onLoadEnd={() => {
+              setTimeout(() => {
+                fetchImageDetails();
+              }, 200);
+            }}
+          />
+        </ViewShot>
+      )}
     </View>
   );
 };

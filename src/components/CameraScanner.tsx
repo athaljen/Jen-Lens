@@ -220,25 +220,6 @@ const CameraScanner = ({cameraRef, viewShotRef}: Props) => {
           onCodeScanned,
         }}
       />
-      <Svg style={styles.svg} pointerEvents="none">
-        {/* <Polygon
-          ref={svgPath}
-          points={'0,0 0,0 0,0 0,0'}
-          fill="transparent"
-          stroke={Colors.white}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          strokeWidth={3}
-        /> */}
-        <Path
-          ref={pathRef}
-          d={''}
-          fill="rgba(0, 0, 0, 0.34)"
-          fillRule="evenodd"
-          strokeWidth={2}
-          stroke={'#ffffff'}
-        />
-      </Svg>
 
       {/* <View style={styles.topContainer}>
         <Text style={styles.Jen}>{'Jen Lens'}</Text>

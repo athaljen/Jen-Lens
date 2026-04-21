@@ -16,7 +16,7 @@ type ActionType = 'Scan' | 'Search';
 
 /////components
 const Controls = memo(({onImageCapture}: ControlProps) => {
-  const [Type, setType] = useState<ActionType>('Scan');
+  const [Type, setType] = useState<ActionType>('Search');
 
   const handleTypeChange = useCallback(() => {
     Vibration.vibrate(50);
@@ -32,15 +32,15 @@ const Controls = memo(({onImageCapture}: ControlProps) => {
           {transform: [{scale: pressed ? 0.9 : 1}]},
         ]}>
         <View style={styles.searchInner}>
-          <FastImage
+          {/* <FastImage
             style={styles.search}
             source={Type === 'Scan' ? Icons.qr_code : Icons.search}
             resizeMode="stretch"
-          />
+          /> */}
         </View>
       </Pressable>
 
-      <View style={styles.lowerContainer}>
+      {/* <View style={styles.lowerContainer}>
         <Pressable
           onPress={handleTypeChange}
           style={[
@@ -72,7 +72,7 @@ const Controls = memo(({onImageCapture}: ControlProps) => {
           />
           <Text style={styles.selectableText}>{'Scan'}</Text>
         </Pressable>
-      </View>
+      </View> */}
     </>
   );
 });
